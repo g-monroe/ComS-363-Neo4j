@@ -1,0 +1,42 @@
+# TO EMPTY THE NEO4J DATABASE
+START n=node(*) OPTIONAL MATCH (n)-[r]-() DELETE n,r
+
+Item 1:
+MATCH (facultyPerson)<-[:F2P]-(:Faculty)-[:Mentors]->(:Student)-[:S2P]->(studentPerson) 
+RETURN facultyPerson.Name as faculty, studentPerson.Name as student
+
+Item 2:
+MATCH (user)-[:Mentors]->(student) 
+WHERE student.Classification = "Sophomore"
+RETURN avg(student.GPA) as student
+
+Item 3. For each enrolled student, list his/her name and his/her mentor's name.
+ANS: 
+MATCH (sp:Person)<-[:S2P]-(s:Student)<-[:Mentors]-(f:Faculty)-[:F2P]->(fp:Person) RETURN sp.Name as StudentName ,fp.Name as MentorsName
+
+Item 4. List the Names of students who have at least one A in courses they are enrolled in. (Do not consider A- as an A.)
+ANS: 
+MATCH (sp:Person)<-[:S2P]-(s:Student)-[t:Taking{Grade:'A'}]->(o:Offering) RETURN sp.Name as Name
+// To confirm that A- is not considered
+// MATCH (sp:Person)<-[:S2P]-(s:Student)-[t:Taking{Grade:'A'}]->(o:Offering) RETURN sp.Name,r.Grade
+
+Item 5. List the course codes of courses that are prerequisites for the course CS311.
+ANS: 
+MATCH (c1:Course{CourseCode:'CS311'})-[pr:PreReq]->(c2:Course) RETURN c2.CourseCode as CourseCode
+
+Item 6. List the Name, and Rank of faculty who have a salary of 100K or higher.
+ANS: 
+MATCH (f:Faculty)-[:F2P]->(fp:Person)  WHERE f.Salary >= 100000 RETURN fp.Name as Name,f.Rank as Rank
+// to verify salary is 100K or higher.
+// MATCH (f:Faculty)-[:F2P]->(fp:Person)  WHERE f.Salary >= 100000 RETURN fp.Name as Name,f.Rank as Rank,f.Salary as Salary
+
+
+Item 7. For each faculty, list his / her name, and classification and GPA of students that the faculty is mentoring.
+ANS: 
+MATCH (s:Student)<-[:Mentors]-(f:Faculty)-[:F2P]->(fp:Person) RETURN fp.Name as FacultyName,s.Classification as StudentClassification,s.GPA as StudentGPA
+
+Item 8. For every offering, list course name, section, instructors' name, and enrollment.
+ANS: 
+MATCH (s:Student)-[t:Taking]->(o:Offering)<-[:Offers]-(instructor:Faculty)-[:F2P]->(fp:Person), (o)-[:Covers]->(c:Course)
+WITH c.CourseName as CourseName,o.Section as Section,fp.Name as FacultyName, count(t) as Enrollment
+Return CourseName,Section,FacultyName,Enrollment
